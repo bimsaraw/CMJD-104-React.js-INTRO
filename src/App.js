@@ -10,6 +10,8 @@ function App() { //Component
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
 
+  const [edit, setEdit] = useState(null);
+
   function getUsers() {
 
     axios.get("http://localhost:8080/users")
@@ -21,7 +23,11 @@ function App() { //Component
       });
   }
 
-  function handleUsername(event) {
+  /*   function handleUsername(event) {
+      setUsername(event.target.value);
+    } */
+
+  const handleUsername = (event) => { //arrow function
     setUsername(event.target.value);
   }
 
@@ -49,7 +55,27 @@ function App() { //Component
       })
       .catch(function (error) {
         console.log(error);
-      }) 
+      })
+  }
+
+  function updateUser(event) {
+    event.preventDefault();
+
+    const data = {
+      username: username,
+      password: password,
+      email: email,
+    }
+
+    axios.put("http://localhost:8080/users/" + edit, data)
+      .then(function (response) {
+        getUsers();
+        setEdit(null);
+        console.log(response);
+      })
+      .catch(function (error) {
+        console.log(error);
+      })
   }
 
   return (
@@ -60,31 +86,92 @@ function App() { //Component
       {users && users.map((row) => (
         <div key={row.id}>
           {row.username} - {row.email}
+
+          <button type="button" onClick={() => {
+            setEdit(row.id);
+            setUsername(row.username);
+            setEmail(row.email);
+          }}>Edit</button>
+
+          <button type="button" onClick={() => {
+            
+            axios.delete("http://localhost:8080/users/" + row.id)
+              .then(function () {
+                getUsers();
+              })
+              .catch(function (error) {
+                console.log(error);
+              });
+
+          }}>Delete</button>
         </div>
       ))
 
       }
 
-      <h2>Create User</h2>
-
-      <form onSubmit={createUser}>
-        <div>
-          <label>Username</label>
-          <input type="text" onChange={handleUsername} required />
-        </div>
+      {!edit &&
 
         <div>
-          <label>Password</label>
-          <input type="password" onChange={handlePassword} required />
+
+          <h2>Create User</h2>
+
+          <form onSubmit={createUser}>
+            <div>
+              <label>Username</label>
+              <input type="text" onChange={handleUsername} required />
+            </div>
+
+            <div>
+              <label>Password</label>
+              <input type="password" onChange={handlePassword} required />
+            </div>
+
+            <div>
+              <label>Email</label>
+              <input type="email" onChange={handleEmail} required />
+            </div>
+
+            <button type="submit">Create User</button>
+          </form>
+
         </div>
+
+      }
+
+
+      {/* 1. Define a State called Edit, and set user's ID when edit button is clicked */}
+      {/* 2. Conditionally render Edit form when edit state is not null */}
+      {/* 3. Add a cancel button to edit form, and when it is clicked, set edit state to null */}
+
+      {edit &&
 
         <div>
-          <label>Email</label>
-          <input type="email" onChange={handleEmail} required />
-        </div>
 
-        <button type="submit">Create User</button>
-      </form>
+          <h2>Edit User</h2>
+
+          <form onSubmit={updateUser}>
+            <div>
+              <label>Username</label>
+              <input type="text" onChange={handleUsername} value={username} required />
+            </div>
+
+            <div>
+              <label>Password</label>
+              <input type="password" onChange={handlePassword} required />
+            </div>
+
+            <div>
+              <label>Email</label>
+              <input type="email" onChange={handleEmail} value={email} required />
+            </div>
+
+            <button type="submit">Update User</button>
+            <button type="button" onClick={() => {
+              setEdit(null);
+            }}>Cancel</button>
+          </form>
+        </div>
+      }
 
 
     </div>
