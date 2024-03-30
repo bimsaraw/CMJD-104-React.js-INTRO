@@ -35,11 +35,11 @@ function Product() {
     }
 
     function handlePrice(event) {
-        setPrice(event.target.value);
+        setPrice(parseFloat(event.target.value));
     }
 
     function handleQuantity(event) {
-        setQty(event.target.value);
+        setQty(parseInt(event.target.value));
     }
 
     function handleCategory(event) {
@@ -66,6 +66,38 @@ function Product() {
             });
     }
 
+    const [edit, setEdit] = useState(false);
+    const [productId, setProductId] = useState(null);
+
+    function getProducts() {
+        axios.get("http://localhost:8080/products")
+            .then(function (response) {
+                setProducts(response.data);
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+    }
+
+    function updateProduct(event) {
+        event.preventDefault();
+
+        const data = {
+            name: name,
+            price: price,
+            quantity: qty,
+            categoryId: categoryId
+        }
+
+        axios.put("http://localhost:8080/products/" + productId, data)
+            .then(function (response) {
+                getProducts();
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+    }
+
     return (
         <div>
             <h1>Products</h1>
@@ -77,46 +109,95 @@ function Product() {
                         <p>Category: {product.category?.name}</p>
                         <p>Price: {product.price}</p>
                         <p>Qty: {product.quantity}</p>
+                        <button type="button" className="btn btn-primary" onClick={() => {
+                            setEdit(true);
+                            setProductId(product.id);
+                            setName(product.name);
+                            setPrice(product.price);
+                            setQty(product.quantity);
+                            setCategoryId(product.category?.id);
+                        }}>Edit</button>
                     </div>
                 )
             })
             }
 
-            <form onSubmit={createProduct}>
-                <div>
-                    <label>Name</label>
-                    <input type="text" onChange={handleName} required />
-                </div>
+            {!edit &&
 
-                <br />
+                <form onSubmit={createProduct}>
+                    <div>
+                        <label>Name</label>
+                        <input type="text" onChange={handleName} required />
+                    </div>
 
-                <div>
-                    <label>Price</label>
-                    <input type="text" onChange={handlePrice} required />
-                </div>
+                    <br />
 
-                <br />
+                    <div>
+                        <label>Price</label>
+                        <input type="text" onChange={handlePrice} required />
+                    </div>
 
-                <div>
-                    <label>Quantity</label>
-                    <input type="text" onChange={handleQuantity} required />
-                </div>
+                    <br />
 
-                <div>
-                    <label>Category</label>
-                    <select onChange={handleCategory} required>
-                        <option value="">Select a category</option>
+                    <div>
+                        <label>Quantity</label>
+                        <input type="text" onChange={handleQuantity} required />
+                    </div>
 
-                        {categories && categories.map((category) => (
-                            <option key={category.id} value={category.id}>{category.name}</option>
-                        ))}
-                    </select>
-                </div>
+                    <div>
+                        <label>Category</label>
+                        <select onChange={handleCategory} required>
+                            <option value="">Select a category</option>
 
-                <br />
-                <br />
-                <button type="submit">Create Product</button>
-            </form>
+                            {categories && categories.map((category) => (
+                                <option key={category.id} value={category.id} selected={categoryId === category.id}>{category.name}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <br />
+                    <br />
+                    <button type="submit">Create Product</button>
+                </form>
+            }
+
+            {edit &&
+                <form onSubmit={updateProduct}>
+                    <div>
+                        <label>Name</label>
+                        <input type="text" onChange={handleName} value={name} required />
+                    </div>
+
+                    <br />
+
+                    <div>
+                        <label>Price</label>
+                        <input type="text" onChange={handlePrice} value={price} required />
+                    </div>
+
+                    <br />
+
+                    <div>
+                        <label>Quantity</label>
+                        <input type="text" onChange={handleQuantity} value={qty} required />
+                    </div>
+
+                    <div>
+                        <label>Category</label>
+                        <select onChange={handleCategory} required>
+                            <option value="">Select a category</option>
+
+                            {categories && categories.map((category) => (
+                                <option key={category.id} value={category.id} selected={category.id === categoryId}>{category.name}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <br />
+                    <br />
+                    <button type="submit">Update Product</button>
+                </form>
+            }
 
         </div>
     )
